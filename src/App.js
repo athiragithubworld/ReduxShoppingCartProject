@@ -5,6 +5,8 @@ import Products from "./components/Shop/Products";
 import { Fragment, useEffect } from "react";
 import { UIActions } from "./store/UISlice";
 import Notifications from "./components/UI/Notifications";
+import { cartActions } from "./store/CartSlice";
+import { sendCartData } from "./store/CartActions";
 
 let intialState = true;
 function App() {
@@ -15,41 +17,30 @@ function App() {
   // console.log("showcart", showCart);
 
   useEffect(() => {
-    const sendCartData = async () => {
-      dispatch(
-        UIActions.showErrorNotification({
-          status: "Pending",
-          title: "Sending...",
-          message: "Sending data to cart...",
-        })
-      );
+    const getCartData = async () => {
       const response = await fetch(
-        "https://reactreduxproject-14615-default-rtdb.firebaseio.com/cart.json",
-        {
-          method: "PUT",
-          body: JSON.stringify(cart),
-        }
+        "https://reactreduxproject-14615-default-rtdb.firebaseio.com/cart.json"
       );
+
       if (!response.ok) {
-        throw new Error("Sending data to cart is failed");
+        throw new Error("Getting data from cart is failed");
       }
       dispatch(
         UIActions.showErrorNotification({
           status: "success",
           title: "Success",
-          message: "Sent data to cart successfully..",
+          message: "Getting data from cart successfully..",
         })
       );
 
       const responseData = await response.json();
+      dispatch(cartActions.replaceCart(responseData));
+      // dispatch(cartActions.getData([responseData.items]));
+      console.log("res1", responseData);
     };
 
-    if (intialState) {
-      intialState = false;
-      return;
-    }
-    sendCartData().catch((error) => {
-      console.log("err111", error);
+    getCartData().catch((error) => {
+      // console.log("err111", error);
       dispatch(
         UIActions.showErrorNotification({
           status: "error",
@@ -58,6 +49,54 @@ function App() {
         })
       );
     });
+  }, []);
+
+  useEffect(() => {
+    if (intialState) {
+      intialState = false;
+      return;
+    }
+    dispatch(sendCartData(cart));
+
+    // const sendCartData = async () => {
+    //   dispatch(
+    //     UIActions.showErrorNotification({
+    //       status: "Pending",
+    //       title: "Sending...",
+    //       message: "Sending data to cart...",
+    //     })
+    //   );
+    //   const response = await fetch(
+    //     "https://reactreduxproject-14615-default-rtdb.firebaseio.com/cart.json",
+    //     {
+    //       method: "PUT",
+    //       body: JSON.stringify(cart),
+    //     }
+    //   );
+    //   if (!response.ok) {
+    //     throw new Error("Sending data to cart is failed");
+    //   }
+    //   dispatch(
+    //     UIActions.showErrorNotification({
+    //       status: "success",
+    //       title: "Success",
+    //       message: "Sent data to cart successfully..",
+    //     })
+    //   );
+
+    //   const responseData = await response.json();
+    // };
+
+    // sendCartData().catch((error) => {
+    //   console.log("err111", error);
+    //   dispatch(
+    //     UIActions.showErrorNotification({
+    //       status: "error",
+    //       title: "Error!",
+    //       message: "Sending data to cart having error",
+    //     })
+    //   );
+    // });
   }, [cart, dispatch]);
 
   return (
